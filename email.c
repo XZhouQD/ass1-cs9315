@@ -19,8 +19,8 @@ PG_MODULE_MAGIC;
 
 typedef struct Email
 {
-	char local[256];
-	char domain[256];
+	char * local;
+	char * domain;
 } Email;
 
 
@@ -123,8 +123,8 @@ email_in(PG_FUNCTION_ARGS)
 	}
 
 	result = (Email *) palloc(sizeof(Email));
-	strcpy(result->local, local);
-	strcpy(result->domain, domain);
+	result->local = strdup(local);
+	result->domain = strdup(domain);
 	PG_RETURN_POINTER(result);
 }
 
