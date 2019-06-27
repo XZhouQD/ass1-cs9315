@@ -1,5 +1,5 @@
 /*
- * src/tutorial/complex.c
+ * email.c
  *
  ******************************************************************************
   This file contains routines that can be bound to a Postgres backend and
@@ -146,10 +146,10 @@ email_out(PG_FUNCTION_ARGS)
  * These are optional.
  *****************************************************************************/
 
-PG_FUNCTION_INFO_V1(complex_recv);
+PG_FUNCTION_INFO_V1(email_recv);
 
 Datum
-complex_recv(PG_FUNCTION_ARGS)
+email_recv(PG_FUNCTION_ARGS)
 {
 	StringInfo	buf = (StringInfo) PG_GETARG_POINTER(0);
 	Complex    *result;
@@ -160,10 +160,10 @@ complex_recv(PG_FUNCTION_ARGS)
 	PG_RETURN_POINTER(result);
 }
 
-PG_FUNCTION_INFO_V1(complex_send);
+PG_FUNCTION_INFO_V1(email_send);
 
 Datum
-complex_send(PG_FUNCTION_ARGS)
+email_send(PG_FUNCTION_ARGS)
 {
 	Complex    *complex = (Complex *) PG_GETARG_POINTER(0);
 	StringInfoData buf;
@@ -177,13 +177,13 @@ complex_send(PG_FUNCTION_ARGS)
 /*****************************************************************************
  * New Operators
  *
- * A practical Complex datatype would provide much more than this, of course.
+ * A practical Email datatype would provide much more than this, of course.
  *****************************************************************************/
 
-PG_FUNCTION_INFO_V1(complex_add);
+PG_FUNCTION_INFO_V1(email_add);
 
 Datum
-complex_add(PG_FUNCTION_ARGS)
+email_add(PG_FUNCTION_ARGS)
 {
 	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
 	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
@@ -210,7 +210,7 @@ complex_add(PG_FUNCTION_ARGS)
 #define Mag(c)	((c)->x*(c)->x + (c)->y*(c)->y)
 
 static int
-complex_abs_cmp_internal(Complex * a, Complex * b)
+email_abs_cmp_internal(Email * a, Email * b)
 {
 	double		amag = Mag(a),
 				bmag = Mag(b);
@@ -223,68 +223,68 @@ complex_abs_cmp_internal(Complex * a, Complex * b)
 }
 
 
-PG_FUNCTION_INFO_V1(complex_abs_lt);
+PG_FUNCTION_INFO_V1(email_abs_lt);
 
 Datum
-complex_abs_lt(PG_FUNCTION_ARGS)
+email_abs_lt(PG_FUNCTION_ARGS)
 {
 	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
 	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
 
-	PG_RETURN_BOOL(complex_abs_cmp_internal(a, b) < 0);
+	PG_RETURN_BOOL(email_abs_cmp_internal(a, b) < 0);
 }
 
-PG_FUNCTION_INFO_V1(complex_abs_le);
+PG_FUNCTION_INFO_V1(email_abs_le);
 
 Datum
-complex_abs_le(PG_FUNCTION_ARGS)
+email_abs_le(PG_FUNCTION_ARGS)
 {
 	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
 	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
 
-	PG_RETURN_BOOL(complex_abs_cmp_internal(a, b) <= 0);
+	PG_RETURN_BOOL(email_abs_cmp_internal(a, b) <= 0);
 }
 
-PG_FUNCTION_INFO_V1(complex_abs_eq);
+PG_FUNCTION_INFO_V1(email_abs_eq);
 
 Datum
-complex_abs_eq(PG_FUNCTION_ARGS)
+email_abs_eq(PG_FUNCTION_ARGS)
 {
 	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
 	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
 
-	PG_RETURN_BOOL(complex_abs_cmp_internal(a, b) == 0);
+	PG_RETURN_BOOL(email_abs_cmp_internal(a, b) == 0);
 }
 
-PG_FUNCTION_INFO_V1(complex_abs_ge);
+PG_FUNCTION_INFO_V1(email_abs_ge);
 
 Datum
-complex_abs_ge(PG_FUNCTION_ARGS)
+email_abs_ge(PG_FUNCTION_ARGS)
 {
 	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
 	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
 
-	PG_RETURN_BOOL(complex_abs_cmp_internal(a, b) >= 0);
+	PG_RETURN_BOOL(email_abs_cmp_internal(a, b) >= 0);
 }
 
-PG_FUNCTION_INFO_V1(complex_abs_gt);
+PG_FUNCTION_INFO_V1(email_abs_gt);
 
 Datum
-complex_abs_gt(PG_FUNCTION_ARGS)
+email_abs_gt(PG_FUNCTION_ARGS)
 {
 	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
 	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
 
-	PG_RETURN_BOOL(complex_abs_cmp_internal(a, b) > 0);
+	PG_RETURN_BOOL(email_abs_cmp_internal(a, b) > 0);
 }
 
-PG_FUNCTION_INFO_V1(complex_abs_cmp);
+PG_FUNCTION_INFO_V1(email_abs_cmp);
 
 Datum
-complex_abs_cmp(PG_FUNCTION_ARGS)
+email_abs_cmp(PG_FUNCTION_ARGS)
 {
 	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
 	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
 
-	PG_RETURN_INT32(complex_abs_cmp_internal(a, b));
+	PG_RETURN_INT32(email_abs_cmp_internal(a, b));
 }
