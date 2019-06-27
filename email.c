@@ -122,6 +122,18 @@ email_in(PG_FUNCTION_ARGS)
 		ereport(ERROR,(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for email: \"%s\"",str)));
 	}
 
+	i = 0;
+	while(local[i] != '\0') {
+		local[i] = tolower(local[i]);
+		i++;
+	}
+
+	i = 0;
+	while(local[i] != '\0') {
+		domain[i] = tolower(domain[i]);
+		i++;
+	}
+
 	result = (Email *) palloc(sizeof(Email));
 	result->local = strdup(local);
 	result->domain = strdup(domain);
