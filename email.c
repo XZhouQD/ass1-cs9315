@@ -24,8 +24,7 @@ typedef int int4;
 typedef struct Email
 {
 	int4 length;
-	int4 offset;
-	char data[1];
+	char text[1];
 } Email;
 
 
@@ -87,9 +86,9 @@ email_in(PG_FUNCTION_ARGS)
 	length = strlen(str);
 	domainLength = length - ((temp-str)+1);
 	localLength = temp-str;
-	if (domainLength > 255)
+	if (domainLength > 256)
 		printError(str);
-	if (localLength > 255)
+	if (localLength > 256)
 		printError(str);
 
 	//copy into seperate string for checking
@@ -103,23 +102,16 @@ email_in(PG_FUNCTION_ARGS)
 		printError(str);
 
 	//to lower case
-	int i = 0;
-	while(local[i] != '\0') {
-		local[i] = tolower(local[i]);
-		i++;
-	}
-	i = 0;
-	while(domain[i] != '\0') {
-		domain[i] = tolower(domain[i]);
-		i++;
-	}
+	char * lowerStr = (char *)palloc(length+1);
+	strcpy(lowerStr, str);
+	int i;
+	for (i = 0; lowerStr[i]; i++)
+		lowerStr[i] = tolower(lowerStr[i]);
 
 	//store in struct
-	result = (Email *) palloc(VARHDRSZ*2 + length - 1); //2*int4 + string without '@'
-	SET_VARSIZE(result, VARHDRSZ*2 + length - 1);
-	result->offset = localLength; //local part offset length
-	memcpy(result->data, str, localLength); //local part
-	memcpy(result->data + localLength, temp+1, domainLength); //domain part, remove '@'
+	result = (Email *) palloc(VARHDRSZ + length); //2*int4 + string without '@'
+	SET_VARSIZE(result, VARHDRSZ + length);
+	snprintf(result->text, length+1, "%s", lowerStr);
 
 	PG_RETURN_POINTER(result);
 
@@ -230,13 +222,10 @@ email_out(PG_FUNCTION_ARGS)
 {
 	Email * e = (Email *) PG_GETARG_POINTER(0); //get the argument Email struct
 
-	int resultLength = (VARSIZE(e) - VARHDRSZ*2 + 2); //length = VARSIZE - int4*2 + '@' + '\0'
+	int resultLength = VARSIZE(e) - VARHDRSZ +1; //length = VARSIZE - int4*2 + '@' + '\0'
 	char * result = palloc(resultLength);
 
-	memcpy(result, e->data, e->offset); //copy local part
-	result[offset] = '@'; //add '@'
-	memcpy(result+offset+1, e->data+e->offset, VARSIZE(e)-VARHDRSZ*2-e->offset); //copy domain part
-	result[resultLength-1] = '\0'; //add'\0'
+	snprintf(result, resultLength, "%s", e->text);
 
 	PG_RETURN_CSTRING(result);
 }
