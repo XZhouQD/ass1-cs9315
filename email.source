@@ -67,12 +67,12 @@ CREATE FUNCTION email_dne(EmailAddr, EmailAddr)
    AS '_OBJWD_/email'
    LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION email_cmp(EmailAddr, EmailAddr)
+CREATE FUNCTION email_abs_cmp(EmailAddr, EmailAddr)
    RETURNS int4
    AS '_OBJWD_/email'
    LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION email_check(EmailAddr, EmailAddr)
+CREATE FUNCTION email_check(EmailAddr)
    RETURNS int4
    AS '_OBJWD_/email'
    LANGUAGE C IMMUTABLE STRICT;
@@ -145,5 +145,5 @@ CREATE OPERATOR CLASS email_ops
 CREATE OPERATOR CLASS email_ops
    DEFAULT FOR TYPE EmailAddr USING hash AS
       OPERATOR 1 = ,
-      FUNCTION 1 email_check(EmailAddress);
+      FUNCTION 1 email_check(EmailAddr);
 
