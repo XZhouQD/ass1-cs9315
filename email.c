@@ -30,7 +30,20 @@ typedef struct Email
 	char text[1];
 } EmailAddr;
 
-
+Datum email_in(PG_FUNCTION_ARGS);
+Datum email_out(PG_FUNCTION_ARGS);
+Datum email_recv(PG_FUNCTION_ARGS);
+Datum email_send(PG_FUNCTION_ARGS);
+Datum email_eq(PG_FUNCTION_ARGS);
+Datum email_gt(PG_FUNCTION_ARGS);
+Datum email_de(PG_FUNCTION_ARGS);
+Datum email_ne(PG_FUNCTION_ARGS);
+Datum email_ge(PG_FUNCTION_ARGS);
+Datum email_lt(PG_FUNCTION_ARGS);
+Datum email_le(PG_FUNCTION_ARGS);
+Datum email_dne(PG_FUNCTION_ARGS);
+Datum email_abs_cmp(PG_FUNCTION_ARGS);
+Datum email_check(PG_FUNCTION_ARGS);
 
 //Regex checking helper functions
 int regexMatch(char * str, char * regexPattern) {
