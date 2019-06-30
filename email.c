@@ -241,12 +241,15 @@ PG_FUNCTION_INFO_V1(email_recv);
 Datum
 email_recv(PG_FUNCTION_ARGS)
 {
-	StringInfo	buf = (StringInfo) PG_GETARG_POINTER(0);
-	Complex    *result;
+	StringInfo buffer = (StringInfo) PG_GETARG_POINTER(0);
+	int length = pg_getmsgint64(buffer);
+	char * str = pg_getmsgstring(buffer);
+	str[length-1] = '\0';
 
-	result = (Complex *) palloc(sizeof(Complex));
-	result->x = pq_getmsgfloat8(buf);
-	result->y = pq_getmsgfloat8(buf);
+	Email * result = (Email *)palloc(length+VARHDRSZ);
+	SET_VARSIZE(result, length+VARHDRSZ);
+	snprintf(result->text, length, "%s", str);
+
 	PG_RETURN_POINTER(result);
 }
 
@@ -255,13 +258,12 @@ PG_FUNCTION_INFO_V1(email_send);
 Datum
 email_send(PG_FUNCTION_ARGS)
 {
-	Complex    *complex = (Complex *) PG_GETARG_POINTER(0);
-	StringInfoData buf;
-
-	pq_begintypsend(&buf);
-	pq_sendfloat8(&buf, complex->x);
-	pq_sendfloat8(&buf, complex->y);
-	PG_RETURN_BYTEA_P(pq_endtypsend(&buf));
+	Email *e = (Email *) PG_GETARG_POINTER(0);
+	StringInfoData buffer;
+	pg_begintypsend(&buffer);
+	pg_sendint64(&buffer, VARSIZE(email)- VARHDRSZ);
+	pg_sendstring(&buffer, e->text);
+	PG_RETURN_BYTEA_P(pg_endtypsend(&buffer));
 }
 
 /*****************************************************************************
