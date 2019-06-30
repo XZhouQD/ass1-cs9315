@@ -12,10 +12,13 @@
 #include "fmgr.h"
 #include "libpq/pqformat.h"		/* needed for send/recv functions */
 
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <regex.h>
 
+#define TRUE 1
+#define FALSE 0
 
 PG_MODULE_MAGIC;
 
@@ -55,6 +58,43 @@ void printError(char * str) {
 	ereport(ERROR,(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for email: \"%s\"",str)));
 }
 
+int validEmail(char * str) {
+
+	int length;
+	char * temp;
+	int domainLength;
+	int localLength;
+
+	//look for '@' to divide local & domain
+	temp = strchr(str, '@');
+	if (!temp)
+		return FALSE;
+
+	//Length check
+	length = strlen(str);
+	domainLength = length - ((temp-str)+1);
+	localLength = temp-str;
+	if (domainLength > 256)
+		return FALSE;
+	if (localLength > 256)
+		return FALSE;
+
+	char local[256] = {0};
+	char domain[256] = {0};
+
+	//copy into seperate string for checking
+	strncpy(local, str, localLength);
+	strncpy(domain, temp+1, domainLength);
+
+	//regex checking
+	if (!checkLocal(local))
+		return FALSE;
+	if (!checkDomain(domain))
+		return FALSE;
+
+	return TRUE;
+}
+
 
 /*****************************************************************************
  * Input/Output functions
@@ -67,38 +107,13 @@ email_in(PG_FUNCTION_ARGS)
 {
 	char * str = PG_GETARG_CSTRING(0);
 
-	char local[256] = {0};
-	char domain[256] = {0};
 
 	EmailAddr * result;
 
-	char * temp;
 	int length;
-	int domainLength;
-	int localLength;
-
-	//look for '@' to divide local & domain
-	temp = strchr(str, '@');
-	if (!temp)
-		printError(str);
-
-	//Length check
 	length = strlen(str);
-	domainLength = length - ((temp-str)+1);
-	localLength = temp-str;
-	if (domainLength > 256)
-		printError(str);
-	if (localLength > 256)
-		printError(str);
 
-	//copy into seperate string for checking
-	strncpy(local, str, localLength);
-	strncpy(domain, temp+1, domainLength);
-
-	//regex checking
-	if (!checkLocal(local))
-		printError(str);
-	if (!checkDomain(domain))
+	if(!checkemal(str)
 		printError(str);
 
 	//to lower case
@@ -278,8 +293,7 @@ email_cmp(Email * a, Email * b)
 	int domainLengthA = strLengthA - localLengthA - 1;
 	int localLengthB = domainB - b->text;
 	int domainLengthB = strLengthB - localLengthB - 1;
-	
-	
+
 	char localA[256] = {0};
 	strncpy(localA, e->text, localLengthA);
 	char localB[256] = {0};
@@ -292,22 +306,19 @@ email_cmp(Email * a, Email * b)
 	int domain = strcmp(domainA,domainB);
 
 	int local = strcmp(localA, localB);
-	
-	if(domain==0)
-		{
-			if(local > 0) 
-				return 1;
-			if(local == 0) 
-				return 2;
-			if(local < 0) 
-				return 3;	
-			}
-		
+
+	if(domain==0){
+		if(local > 0)
+			return 1;
+		if(local == 0)
+			return 0;
+		if(local < 0)
+			return -1;
+	}
 	if(domain > 0)
-		return 4;
+		return 2;
 	if(domain < 0)
-		return 5;
-        
+		return -2;
 }
 }
 /*****************************************************************************
@@ -363,7 +374,7 @@ email_abs_cmp_internal(Email * a, Email * b)
 PG_FUNCTION_INFO_V1(email_eql);
 
 Datum 
-email_eql(PG_FUNCTION_ARGS)
+email_eq(PG_FUNCTION_ARGS)
 {
 	// todo
 	//Create two email, use cmp function to compare them
@@ -371,10 +382,10 @@ email_eql(PG_FUNCTION_ARGS)
 	Email *left = (Email *) PG_GETARG_POINTER(0); 
 	Email *right = (Email *) PG_GETARG_POINTER(1);
 	int isEqual;
-	if(email_cmp(left,right)==2){
-	    isEqual = 1;
+	if(email_cmp(left,right)==0){
+	    isEqual = TRUE;
 	}else {
-	    isEqual = 0;
+	    isEqual = FALSE;
 	}
 	PG_RETURN_BOOL(isEqual);
 }
@@ -387,10 +398,10 @@ email_gt(PG_FUNCTION_ARGS)
 	Email *left = (Email *) PG_GETARG_POINTER(0); 
 	Email *right = (Email *) PG_GETARG_POINTER(1);
 	int isGreater;
-	if(email_cmp(left,right)==1 || email_cmp(left,right)==4){
-	    isGreater = 1;
+	if(email_cmp(left,right)>0){
+	    isGreater = TRUE;
 	}else {
-	    isGreater = 0;
+	    isGreater = FALSE;
 	}
 	PG_RETURN_BOOL(isGreater);
 }
@@ -399,16 +410,16 @@ email_gt(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(email_domain_eql);
 
 Datum 
-email_domain_eql(PG_FUNCTION_ARGS)
+email_de(PG_FUNCTION_ARGS)
 {
 	// todo
 	Email *left = (Email *) PG_GETARG_POINTER(0); 
 	Email *right = (Email *) PG_GETARG_POINTER(1);
 	int domainEqual;
-	if(email_cmp(left,right)==1 || email_cmp(left,right)==2 || email_cmp(left,right) ==3){
-	    domainEqual= 1;
+	if(abs(email_cmp(left,right))<=1){
+	    domainEqual= TRUE;
 	}else {
-	    domainEqual = 0;
+	    domainEqual = FALSE;
 	}
 	PG_RETURN_BOOL(domainEqual);
 }
@@ -416,16 +427,16 @@ email_domain_eql(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(email_not_eql);
 
 Datum 
-email_not_eql(PG_FUNCTION_ARGS)
+email_ne(PG_FUNCTION_ARGS)
 {
 	//todo
 	Email *left = (Email *) PG_GETARG_POINTER(0); 
 	Email *right = (Email *) PG_GETARG_POINTER(1);
 	int notEqual;
-	if(email_cmp(left,right)!=2){
-	    notEuqal = 1;
+	if(email_cmp(left,right)!=0){
+	    notEuqal = TRUE;
 	}else {
-	    notEuqal = 0;
+	    notEuqal = FALSE;
 	}
 	PG_RETURN_BOOL(notEqual);
 }
@@ -439,10 +450,10 @@ email_ge(PG_FUNCTION_ARGS)
 	Email *left = (Email *) PG_GETARG_POINTER(0); 
 	Email *right = (Email *) PG_GETARG_POINTER(1);
 	int isGreater_Equal;
-	if(email_cmp(left,right)==1 || email_cmp(left,right)==2 || email_cmp(left,right)==4){
-	    isGreater_Equal = 1;
+	if(email_cmp(left,right)>=0){
+	    isGreater_Equal = TRUE;
 	}else {
-	    isGreater_Equal = 0;
+	    isGreater_Equal = FALSE;
 	}
 	PG_RETURN_BOOL(isGreater_Equal);
 }
@@ -456,10 +467,10 @@ email_lt(PG_FUNCTION_ARGS)
 	Email *left = (Email *) PG_GETARG_POINTER(0); 
 	Email *right = (Email *) PG_GETARG_POINTER(1);
 	int isLess;
-	if(email_cmp(left,right)==3 || email_cmp(left,right)==5){
-	    isLess = 1;
+	if(email_cmp(left,right)<0){
+	    isLess = TRUE;
 	}else {
-	    isLess= 0;
+	    isLess= FALSE;
 	}
 	PG_RETURN_BOOL(isLess);
 }
@@ -473,10 +484,10 @@ email_le(PG_FUNCTION_ARGS)
 	Email *left = (Email *) PG_GETARG_POINTER(0); 
 	Email *right = (Email *) PG_GETARG_POINTER(1);
 	int isLess_Equal;
-	if(email_cmp(left,right)==2 || email_cmp(left,right)==3 || email_cmp(left,right)==5){
-	    isLess_Equal = 1;
+	if(email_cmp(left,right)<=0){
+	    isLess_Equal = TRUE;
 	}else {
-	    isLess_Equal = 0;
+	    isLess_Equal = FALSE;
 	}
 	PG_RETURN_BOOL(isLess_Equal);
 }
@@ -484,16 +495,16 @@ email_le(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(email_domain_not_eql);
 
 Datum 
-email_domain_not_eql(PG_FUNCTION_ARGS)
+email_dne(PG_FUNCTION_ARGS)
 {
 	// todo
 	Email *left = (Email *) PG_GETARG_POINTER(0); 
 	Email *right = (Email *) PG_GETARG_POINTER(1);
 	int domain_notEqual;
-	if(email_cmp(left,right)==4 || email_cmp(left,right)==5){
-	    domain_notEqual = 1;
+	if(abs(email_cmp(left,right))>1){
+	    domain_notEqual = TRUE;
 	}else {
-	    domain_notEqual = 0;
+	    domain_notEqual = FALSE;
 	}
 	PG_RETURN_BOOL(domain_notEqual);
 }
@@ -503,7 +514,15 @@ PG_FUNCTION_INFO_V1(email_abs_cmp);
 Datum
 email_abs_cmp(PG_FUNCTION_ARGS)
 {
-	// todo
+	EmailAddr * left = (EmailAddr *) PG_GETARGPOINTER(0);
+	EmailAddr * right = (EmailAddr *) PG_GETARGPOINTER(1);
+
+	int32 abs_cmp = email_cmp(left, right);
+	if(abs_cmp > 0)
+		abs_cmp = 1;
+	else if (abs_cmp < 0)
+		abs_cmp = -1;
+	PG_RETURN_INT322(abs_cmp);
 }
 
 
@@ -512,6 +531,7 @@ PG_FUNCTION_INFO_V1(email_check);
 Datum
 email_check(PG_FUNCTION_ARGS)
 {
-	// todo
+	EmailAddr * e = (EmailAddr *) PG_GETARG_POINTER(0);
+	PG_RETURN_INT32(validEmail(e->text));
 }
 
