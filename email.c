@@ -109,8 +109,8 @@ email_in(PG_FUNCTION_ARGS)
 		lowerStr[i] = tolower(lowerStr[i]);
 
 	//store in struct
-	result = (Email *) palloc(VARHDRSZ + length); //2*int4 + string without '@'
-	SET_VARSIZE(result, VARHDRSZ + length);
+	result = (Email *) palloc(VARHDRSZ + length + 1); //header + string
+	SET_VARSIZE(result, VARHDRSZ + length + 1);
 	snprintf(result->text, length+1, "%s", lowerStr);
 
 	PG_RETURN_POINTER(result);
