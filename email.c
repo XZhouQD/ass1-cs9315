@@ -108,8 +108,8 @@ email_in(PG_FUNCTION_ARGS)
 
 	result = (Email *) palloc(VARHDRSZ + length - 1);
 	SET_VARSIZE(result, VARHDRSZ + length - 1);
-	memcpy(result->local, local, localLength);
-	memcpy(result->domain, domain, domainLength);
+	strcpy(result->local, local);
+	strcpy(result->domain, domain);
 
 
 /*
@@ -218,10 +218,11 @@ PG_FUNCTION_INFO_V1(email_out);
 Datum
 email_out(PG_FUNCTION_ARGS)
 {
-	Complex    *complex = (Complex *) PG_GETARG_POINTER(0);
-	char	   *result;
+	Email * arg = (Email *) PG_GETARG_POINTER(0);
+	char * result;
 
-	result = psprintf("(%g,%g)", complex->x, complex->y);
+	result = psprintf("%s@%s", arg->local, arg->domain);
+
 	PG_RETURN_CSTRING(result);
 }
 
