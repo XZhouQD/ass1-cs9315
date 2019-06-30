@@ -16,5 +16,5 @@ Weight 12 makrs
 
 Group Member:
 1. Xiaowei Zhou z5108173
-2.
-3.
+2. Jiasi Lu z5122462
+3. Haiyan xu z5135077
