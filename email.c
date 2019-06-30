@@ -328,6 +328,17 @@ Datum
 email_eql(PG_FUNCTION_ARGS)
 {
 	// todo
+	//Create two email, use cmp function to compare them
+	//if return value is 2, they are equal, else not equal
+	Email *left = (Email *) PG_GETARG_POINTER(0); 
+	Email *right = (Email *) PG_GETARG_POINTER(1);
+	int isEqual;
+	if(email_cmp(left,right)==2){
+	    isEqual = 1;
+	}else {
+	    isEqual = 0;
+	}
+	PG_RETURN_BOOL(isEqual);
 }
 
 PG_FUNCTION_INFO_V1(email_gt);
@@ -335,7 +346,15 @@ PG_FUNCTION_INFO_V1(email_gt);
 Datum 
 email_gt(PG_FUNCTION_ARGS)
 {
-	// todo
+	Email *left = (Email *) PG_GETARG_POINTER(0); 
+	Email *right = (Email *) PG_GETARG_POINTER(1);
+	int isGreater;
+	if(email_cmp(left,right)==1 || email_cmp(left,right)==4){
+	    isGreater = 1;
+	}else {
+	    isGreater = 0;
+	}
+	PG_RETURN_BOOL(isGreater);
 }
 
 
@@ -345,6 +364,15 @@ Datum
 email_domain_eql(PG_FUNCTION_ARGS)
 {
 	// todo
+	Email *left = (Email *) PG_GETARG_POINTER(0); 
+	Email *right = (Email *) PG_GETARG_POINTER(1);
+	int domainEqual;
+	if(email_cmp(left,right)==1 || email_cmp(left,right)==2 || email_cmp(left,right) ==3){
+	    domainEqual= 1;
+	}else {
+	    domainEqual = 0;
+	}
+	PG_RETURN_BOOL(domainEqual);
 }
 
 PG_FUNCTION_INFO_V1(email_not_eql);
@@ -353,6 +381,15 @@ Datum
 email_not_eql(PG_FUNCTION_ARGS)
 {
 	//todo
+	Email *left = (Email *) PG_GETARG_POINTER(0); 
+	Email *right = (Email *) PG_GETARG_POINTER(1);
+	int notEqual;
+	if(email_cmp(left,right)!=2){
+	    notEuqal = 1;
+	}else {
+	    notEuqal = 0;
+	}
+	PG_RETURN_BOOL(notEqual);
 }
 
 PG_FUNCTION_INFO_V1(email_ge);
@@ -361,6 +398,15 @@ Datum
 email_ge(PG_FUNCTION_ARGS)
 {
 	//todo
+	Email *left = (Email *) PG_GETARG_POINTER(0); 
+	Email *right = (Email *) PG_GETARG_POINTER(1);
+	int isGreater_Equal;
+	if(email_cmp(left,right)==1 || email_cmp(left,right)==2 || email_cmp(left,right)==4){
+	    isGreater_Equal = 1;
+	}else {
+	    isGreater_Equal = 0;
+	}
+	PG_RETURN_BOOL(isGreater_Equal);
 }
 
 PG_FUNCTION_INFO_V1(email_lt);
@@ -369,6 +415,15 @@ Datum
 email_lt(PG_FUNCTION_ARGS)
 {
 	// todo
+	Email *left = (Email *) PG_GETARG_POINTER(0); 
+	Email *right = (Email *) PG_GETARG_POINTER(1);
+	int isLess;
+	if(email_cmp(left,right)==3 || email_cmp(left,right)==5){
+	    isLess = 1;
+	}else {
+	    isLess= 0;
+	}
+	PG_RETURN_BOOL(isLess);
 }
 
 PG_FUNCTION_INFO_V1(email_le);
@@ -377,6 +432,15 @@ Datum
 email_le(PG_FUNCTION_ARGS)
 {
 	// todo
+	Email *left = (Email *) PG_GETARG_POINTER(0); 
+	Email *right = (Email *) PG_GETARG_POINTER(1);
+	int isLess_Equal;
+	if(email_cmp(left,right)==2 || email_cmp(left,right)==3 || email_cmp(left,right)==5){
+	    isLess_Equal = 1;
+	}else {
+	    isLess_Equal = 0;
+	}
+	PG_RETURN_BOOL(isLess_Equal);
 }
 
 PG_FUNCTION_INFO_V1(email_domain_not_eql);
@@ -385,6 +449,15 @@ Datum
 email_domain_not_eql(PG_FUNCTION_ARGS)
 {
 	// todo
+	Email *left = (Email *) PG_GETARG_POINTER(0); 
+	Email *right = (Email *) PG_GETARG_POINTER(1);
+	int domain_notEqual;
+	if(email_cmp(left,right)==4 || email_cmp(left,right)==5){
+	    domain_notEqual = 1;
+	}else {
+	    domain_notEqual = 0;
+	}
+	PG_RETURN_BOOL(domain_notEqual);
 }
 
 PG_FUNCTION_INFO_V1(email_abs_cmp);
