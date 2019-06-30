@@ -325,23 +325,6 @@ email_cmp(Email * a, Email * b)
  * New Operators
  *
  * A practical Email datatype would provide much more than this, of course.
- *****************************************************************************/
-
-PG_FUNCTION_INFO_V1(email_add);
-
-Datum
-email_add(PG_FUNCTION_ARGS)
-{
-	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
-	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
-	Complex    *result;
-
-	result = (Complex *) palloc(sizeof(Complex));
-	result->x = a->x + b->x;
-	result->y = a->y + b->y;
-	PG_RETURN_POINTER(result);
-}
-
 
 /*****************************************************************************
  * Operator class for defining B-tree index
@@ -379,8 +362,8 @@ email_eq(PG_FUNCTION_ARGS)
 	// todo
 	//Create two email, use cmp function to compare them
 	//if return value is 2, they are equal, else not equal
-	Email *left = (Email *) PG_GETARG_POINTER(0); 
-	Email *right = (Email *) PG_GETARG_POINTER(1);
+	EmailAddr *left = (EmailAddr *) PG_GETARG_POINTER(0); 
+	EmailAddr *right = (EmailAddr *) PG_GETARG_POINTER(1);
 	int isEqual;
 	if(email_cmp(left,right)==0){
 	    isEqual = TRUE;
@@ -395,8 +378,8 @@ PG_FUNCTION_INFO_V1(email_gt);
 Datum 
 email_gt(PG_FUNCTION_ARGS)
 {
-	Email *left = (Email *) PG_GETARG_POINTER(0); 
-	Email *right = (Email *) PG_GETARG_POINTER(1);
+	EmailAddr *left = (EmailAddr *) PG_GETARG_POINTER(0); 
+	EmailAddr *right = (EmailAddr *) PG_GETARG_POINTER(1);
 	int isGreater;
 	if(email_cmp(left,right)>0){
 	    isGreater = TRUE;
@@ -413,8 +396,8 @@ Datum
 email_de(PG_FUNCTION_ARGS)
 {
 	// todo
-	Email *left = (Email *) PG_GETARG_POINTER(0); 
-	Email *right = (Email *) PG_GETARG_POINTER(1);
+	EmailAddr *left = (EmailAddr *) PG_GETARG_POINTER(0); 
+	EmailAddr *right = (EmailAddr *) PG_GETARG_POINTER(1);
 	int domainEqual;
 	if(abs(email_cmp(left,right))<=1){
 	    domainEqual= TRUE;
@@ -430,8 +413,8 @@ Datum
 email_ne(PG_FUNCTION_ARGS)
 {
 	//todo
-	Email *left = (Email *) PG_GETARG_POINTER(0); 
-	Email *right = (Email *) PG_GETARG_POINTER(1);
+	EmailAddr *left = (EmailAddr *) PG_GETARG_POINTER(0); 
+	EmailAddr *right = (EmailAddr *) PG_GETARG_POINTER(1);
 	int notEqual;
 	if(email_cmp(left,right)!=0){
 	    notEuqal = TRUE;
@@ -447,8 +430,8 @@ Datum
 email_ge(PG_FUNCTION_ARGS)
 {
 	//todo
-	Email *left = (Email *) PG_GETARG_POINTER(0); 
-	Email *right = (Email *) PG_GETARG_POINTER(1);
+	EmailAddr *left = (EmailAddr *) PG_GETARG_POINTER(0); 
+	EmailAddr *right = (EmailAddr *) PG_GETARG_POINTER(1);
 	int isGreater_Equal;
 	if(email_cmp(left,right)>=0){
 	    isGreater_Equal = TRUE;
@@ -464,8 +447,8 @@ Datum
 email_lt(PG_FUNCTION_ARGS)
 {
 	// todo
-	Email *left = (Email *) PG_GETARG_POINTER(0); 
-	Email *right = (Email *) PG_GETARG_POINTER(1);
+	EmailAddr *left = (EmailAddr *) PG_GETARG_POINTER(0); 
+	EmailAddr *right = (EmailAddr *) PG_GETARG_POINTER(1);
 	int isLess;
 	if(email_cmp(left,right)<0){
 	    isLess = TRUE;
@@ -481,8 +464,8 @@ Datum
 email_le(PG_FUNCTION_ARGS)
 {
 	// todo
-	Email *left = (Email *) PG_GETARG_POINTER(0); 
-	Email *right = (Email *) PG_GETARG_POINTER(1);
+	EmailAddr *left = (EmailAddr *) PG_GETARG_POINTER(0); 
+	EmailAddr *right = (EmailAddr *) PG_GETARG_POINTER(1);
 	int isLess_Equal;
 	if(email_cmp(left,right)<=0){
 	    isLess_Equal = TRUE;
