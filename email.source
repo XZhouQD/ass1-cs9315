@@ -143,7 +143,7 @@ CREATE OPERATOR CLASS email_ops
       FUNCTION 1 email_abs_cmp(EmailAddr, EmailAddr);
 
 CREATE OPERATOR CLASS email_ops
-   DEFAULT FOR TYPE EmailAddress USING hash AS
+   DEFAULT FOR TYPE EmailAddr USING hash AS
       OPERATOR 1 = ,
       FUNCTION 1 email_check(EmailAddress);
 

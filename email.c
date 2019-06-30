@@ -12,9 +12,9 @@
 #include "fmgr.h"
 #include "libpq/pqformat.h"		/* needed for send/recv functions */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include <regex.h>
 
 #define TRUE 1
@@ -24,7 +24,7 @@ PG_MODULE_MAGIC;
 
 typedef int int4;
 
-typedef struct Email
+typedef struct EmailAddr
 {
 	int4 length;
 	char text[1];
@@ -48,7 +48,7 @@ Datum email_check(PG_FUNCTION_ARGS);
 
 
 //Regex checking helper functions
-static int regexMatch(char * str, char * regexPattern) {
+int regexMatch(char * str, char * regexPattern) {
 	regex_t regex;
 	int match = FALSE;
 	if(regcomp(&regex, regexPattern, REG_EXTENDED|REG_ICASE)) return -1;
@@ -57,23 +57,23 @@ static int regexMatch(char * str, char * regexPattern) {
 	return match;
 }
 
-static int checkLocal(char * local) {
+int checkLocal(char * local) {
 	char * localRegex = "^([a-zA-Z]([-]*[a-zA-Z0-9])*[\\.])*[a-zA-Z]([-]*[a-zA-Z0-9])*$";
 	if(!regexMatch(local, localRegex)) return FALSE;
 	return TRUE;
 }
 
-static int checkDomain(char * domain) {
+int checkDomain(char * domain) {
 	char * domainRegex = "^([a-zA-Z]([-]*[a-zA-Z0-9])*[\\.])+[a-zA-Z]([-]*[a-zA-Z0-9])*$";
 	if(!regexMatch(domain, domainRegex)) return FALSE;
 	return TRUE;
 }
 
-static void printError(char * str) {
+void printError(char * str) {
 	ereport(ERROR,(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for email: \"%s\"",str)));
 }
 
-static int validEmail(char * str) {
+int validEmail(char * str) {
 
 	int length;
 	char * temp;
@@ -122,7 +122,6 @@ email_in(PG_FUNCTION_ARGS)
 {
 	char * str = PG_GETARG_CSTRING(0);
 
-
 	EmailAddr * result;
 
 	int length;
@@ -145,104 +144,6 @@ email_in(PG_FUNCTION_ARGS)
 
 	PG_RETURN_POINTER(result);
 
-/*
-// read in email address
-
-	while(*(str+i) != '@' && *(str+i) != '\0') {
-		i++;
-	}
-	if (*(str+i) == '@' && i > 0) {
-		strncpy(local, str, i);
-		i++;
-		temp = str+i;
-		i = 0;
-	} else {
-		ereport(ERROR,(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for email: \"%s\"",str)));
-	}
-	while(*(temp+i) != '@' && *(temp+i) != '\0') {
-		i++;
-	}
-	if (*(temp+i) == '@' || i == 0) {
-		ereport(ERROR,(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for email: \"%s\"",str)));
-	} else {
-		strncpy(domain, temp, i);
-	}
-
-//Syntex test of parts
-	int wordLength = 0;
-	int wordCount = 0;
-	char tempEnd = 0;
-	i = 0;
-	while(local[i] != '\0') {
-		if (local[i] == '.') {
-			if(wordLength == 0) {
-				ereport(ERROR,(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for email: \"%s\"",str)));
-			}
-			if(!isalnum(tempEnd)) {
-				ereport(ERROR,(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for email: \"%s\"",str)));
-			}
-			wordLength = 0;
-			tempEnd = 0;
-		}
-		if (wordLength == 0) {
-			if(!isalpha(local[i])) {
-				ereport(ERROR,(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for email: \"%s\"",str)));
-			}
-			wordCount++;
-		}
-		if(!(isalnum(local[i])||(local[i] == '-')) {
-				ereport(ERROR,(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for email: \"%s\"",str)));
-		}
-		wordLength++;
-		tempEnd = local[i];
-	}
-
-	wordLength = 0;
-	wordCount = 0;
-	tempEnd = 0;
-	while(domain[i] != '\0') {
-		if (domain[i] == '.') {
-			if(wordLength == 0) {
-				ereport(ERROR,(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for email: \"%s\"",str)));
-			}
-			if(!isalnum(tempEnd)) {
-				ereport(ERROR,(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for email: \"%s\"",str)));
-			}
-			wordLength = 0;
-			tempEnd = 0;
-		}
-		if (wordLength == 0) {
-			if(!isalpha(domain[i])) {
-				ereport(ERROR,(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for email: \"%s\"",str)));
-			}
-			wordCount++;
-		}
-		if(!(isalnum(domain[i])||(domain[i] == '-')) {
-				ereport(ERROR,(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for email: \"%s\"",str)));
-		}
-		wordLength++;
-		tempEnd = domain[i];
-	}
-	if (wordCount < 2) {
-		ereport(ERROR,(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for email: \"%s\"",str)));
-	}
-
-	i = 0;
-	while(local[i] != '\0') {
-		local[i] = tolower(local[i]);
-		i++;
-	}
-
-	i = 0;
-	while(local[i] != '\0') {
-		domain[i] = tolower(domain[i]);
-		i++;
-	}
-
-	result = (Email *) palloc(sizeof(Email));
-	result->local = strdup(local);
-	result->domain = strdup(domain);
-*/
 }
 
 PG_FUNCTION_INFO_V1(email_out);
@@ -252,7 +153,7 @@ email_out(PG_FUNCTION_ARGS)
 {
 	EmailAddr * e = (EmailAddr *) PG_GETARG_POINTER(0); //get the argument Email struct
 
-	int resultLength = VARSIZE(e) - VARHDRSZ +1; //length = VARSIZE - int4*2 + '@' + '\0'
+	int resultLength = VARSIZE(e) - VARHDRSZ +1; //length = VARSIZE - int4 + '\0'
 	char * result = palloc(resultLength);
 
 	snprintf(result, resultLength, "%s", e->text);
