@@ -47,7 +47,7 @@ Datum email_check(PG_FUNCTION_ARGS);
 
 
 
-//Regex checking helper functions
+// Regex checking helper functions
 int regexMatch(char * str, char * regexPattern) {
 	regex_t regex;
 	int match = FALSE;
@@ -57,12 +57,14 @@ int regexMatch(char * str, char * regexPattern) {
 	return match;
 }
 
+// Match local part of the email address with regular expression
 int checkLocal(char * local) {
 	char * localRegex = "^([a-zA-Z]([-]*[a-zA-Z0-9])*[\\.])*[a-zA-Z]([-]*[a-zA-Z0-9])*$";
 	if(!regexMatch(local, localRegex)) return FALSE;
 	return TRUE;
 }
 
+// Match domain part of the email address with regular expression
 int checkDomain(char * domain) {
 	char * domainRegex = "^([a-zA-Z]([-]*[a-zA-Z0-9])*[\\.])+[a-zA-Z]([-]*[a-zA-Z0-9])*$";
 	if(!regexMatch(domain, domainRegex)) return FALSE;
@@ -151,9 +153,10 @@ PG_FUNCTION_INFO_V1(email_out);
 Datum
 email_out(PG_FUNCTION_ARGS)
 {
-	Email * e = (Email *) PG_GETARG_POINTER(0); //get the argument Email struct
-
-	int resultLength = VARSIZE(e) - VARHDRSZ +1; //length = VARSIZE - int4 + '\0'
+	//get the argument Email struct
+	Email * e = (Email *) PG_GETARG_POINTER(0);
+	//length = VARSIZE - int4 + '\0'
+	int resultLength = VARSIZE(e) - VARHDRSZ +1; 
 	char * result = palloc(resultLength);
 
 	snprintf(result, resultLength, "%s", e->text);
@@ -192,6 +195,7 @@ email_send(PG_FUNCTION_ARGS)
 	Email *e = (Email *) PG_GETARG_POINTER(0);
 	StringInfoData buffer;
 	pq_begintypsend(&buffer);
+	// Send the length of email address
 	pq_sendint64(&buffer, VARSIZE(e)- VARHDRSZ);
 	pq_sendstring(&buffer, e->text);
 	PG_RETURN_BYTEA_P(pq_endtypsend(&buffer));
@@ -202,15 +206,21 @@ email_send(PG_FUNCTION_ARGS)
 static int
 email_cmp(Email * a, Email * b)
 {
+	// Get str length
 	int strLengthA = VARSIZE(a) - VARHDRSZ - 1;
 	int strLengthB = VARSIZE(b) - VARHDRSZ - 1;
+
+	// Get domain position
 	char *domainApos = strchr(a->text, '@') + 1;
 	char *domainBpos = strchr(b->text, '@') + 1;
+
+	// Get local & domain length
 	int localLengthA = domainApos - a->text;
 	int domainLengthA = strLengthA - localLengthA - 1;
 	int localLengthB = domainBpos - b->text;
 	int domainLengthB = strLengthB - localLengthB - 1;
 
+	// Get strs
 	char localA[256] = {0};
 	strncpy(localA, a->text, localLengthA);
 	char localB[256] = {0};
@@ -224,6 +234,7 @@ email_cmp(Email * a, Email * b)
 
 	int local = strcmp(localA, localB);
 
+	// Get return value
 	if(domain==0){
 		if(local > 0)
 			return 1;
@@ -254,31 +265,14 @@ email_cmp(Email * a, Email * b)
  * an internal three-way-comparison function, as we do here.
  *****************************************************************************/
 
-/*#define Mag(c)	((c)->x*(c)->x + (c)->y*(c)->y)
-
-
-static int
-email_abs_cmp_internal(Email * a, Email * b)
-{
-	double		amag = Mag(a),
-				bmag = Mag(b);
-
-	if (amag < bmag)
-		return -1;
-	if (amag > bmag)
-		return 1;
-	return 0;
-}*/
-
-
 PG_FUNCTION_INFO_V1(email_eq);
 
 Datum 
 email_eq(PG_FUNCTION_ARGS)
 {
-	// todo
-	//Create two email, use cmp function to compare them
-	//if return value is 2, they are equal, else not equal
+
+	// Create two email, use cmp function to compare them
+	// Check equal or not
 	Email *left = (Email *) PG_GETARG_POINTER(0); 
 	Email *right = (Email *) PG_GETARG_POINTER(1);
 	int isEqual;
@@ -312,10 +306,11 @@ PG_FUNCTION_INFO_V1(email_de);
 Datum 
 email_de(PG_FUNCTION_ARGS)
 {
-	// todo
+
 	Email *left = (Email *) PG_GETARG_POINTER(0); 
 	Email *right = (Email *) PG_GETARG_POINTER(1);
 	int domainEqual;
+	// Absolute value check
 	if(abs(email_cmp(left,right))<=1){
 	    domainEqual= TRUE;
 	}else {
@@ -329,10 +324,11 @@ PG_FUNCTION_INFO_V1(email_ne);
 Datum 
 email_ne(PG_FUNCTION_ARGS)
 {
-	//todo
+
 	Email *left = (Email *) PG_GETARG_POINTER(0); 
 	Email *right = (Email *) PG_GETARG_POINTER(1);
 	int notEqual;
+	// Email comparation
 	if(email_cmp(left,right)!=0){
 	    notEqual = TRUE;
 	}else {
@@ -346,7 +342,7 @@ PG_FUNCTION_INFO_V1(email_ge);
 Datum 
 email_ge(PG_FUNCTION_ARGS)
 {
-	//todo
+
 	Email *left = (Email *) PG_GETARG_POINTER(0); 
 	Email *right = (Email *) PG_GETARG_POINTER(1);
 	int isGreater_Equal;
@@ -363,7 +359,7 @@ PG_FUNCTION_INFO_V1(email_lt);
 Datum 
 email_lt(PG_FUNCTION_ARGS)
 {
-	// todo
+
 	Email *left = (Email *) PG_GETARG_POINTER(0); 
 	Email *right = (Email *) PG_GETARG_POINTER(1);
 	int isLess;
@@ -380,7 +376,7 @@ PG_FUNCTION_INFO_V1(email_le);
 Datum 
 email_le(PG_FUNCTION_ARGS)
 {
-	// todo
+
 	Email *left = (Email *) PG_GETARG_POINTER(0); 
 	Email *right = (Email *) PG_GETARG_POINTER(1);
 	int isLess_Equal;
@@ -397,10 +393,11 @@ PG_FUNCTION_INFO_V1(email_dne);
 Datum 
 email_dne(PG_FUNCTION_ARGS)
 {
-	// todo
+
 	Email *left = (Email *) PG_GETARG_POINTER(0); 
 	Email *right = (Email *) PG_GETARG_POINTER(1);
 	int domain_notEqual;
+	// Absolute value check
 	if(abs(email_cmp(left,right))>1){
 	    domain_notEqual = TRUE;
 	}else {
@@ -417,6 +414,7 @@ email_abs_cmp(PG_FUNCTION_ARGS)
 	Email * left = (Email *) PG_GETARG_POINTER(0);
 	Email * right = (Email *) PG_GETARG_POINTER(1);
 
+	// Get abosolute values
 	int32 abs_cmp = email_cmp(left, right);
 	if(abs_cmp > 0)
 		abs_cmp = 1;
