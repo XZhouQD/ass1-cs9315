@@ -30,33 +30,50 @@ typedef struct Email
 	char text[1];
 } EmailAddr;
 
+Datum email_in(PG_FUNCTION_ARGS);
+Datum email_out(PG_FUNCTION_ARGS);
+Datum email_recv(PG_FUNCTION_ARGS);
+Datum email_send(PG_FUNCTION_ARGS);
+Datum email_eq(PG_FUNCTION_ARGS);
+Datum email_gt(PG_FUNCTION_ARGS);
+Datum email_de(PG_FUNCTION_ARGS);
+Datum email_ne(PG_FUNCTION_ARGS);
+Datum email_ge(PG_FUNCTION_ARGS);
+Datum email_lt(PG_FUNCTION_ARGS);
+Datum email_le(PG_FUNCTION_ARGS);
+Datum email_dne(PG_FUNCTION_ARGS);
+Datum email_abs_cmp(PG_FUNCTION_ARGS);
+Datum email_check(PG_FUNCTION_ARGS);
+
+
+
 //Regex checking helper functions
-int regexMatch(char * str, char * regexPattern) {
+static int regexMatch(char * str, char * regexPattern) {
 	regex_t regex;
 	int match = FALSE;
-	if(regcomp(&regex, regexPattern, REG_EXTENDED|REGICASE)) return -1;
+	if(regcomp(&regex, regexPattern, REG_EXTENDED|REG_ICASE)) return -1;
 	if(!regexec(&regex, str, 0, NULL, 0)) match = TRUE;
 	regfree(&regex);
 	return match;
 }
 
-int checkLocal(char * local) {
-	char * localRegex = "^([a-zA-Z]([-]*[a-zA-Z0-9])*[\.])*[a-zA-Z]([-]*[a-zA-Z0-9])*$";
+static int checkLocal(char * local) {
+	char * localRegex = "^([a-zA-Z]([-]*[a-zA-Z0-9])*[\\.])*[a-zA-Z]([-]*[a-zA-Z0-9])*$";
 	if(!regexMatch(local, localRegex)) return FALSE;
 	return TRUE;
 }
 
-int checkDomain(char * domain) {
-	char * domainRegex = "^([a-zA-Z]([-]*[a-zA-Z0-9])*[\.])+[a-zA-Z]([-]*[a-zA-Z0-9])*$";
+static int checkDomain(char * domain) {
+	char * domainRegex = "^([a-zA-Z]([-]*[a-zA-Z0-9])*[\\.])+[a-zA-Z]([-]*[a-zA-Z0-9])*$";
 	if(!regexMatch(domain, domainRegex)) return FALSE;
 	return TRUE;
 }
 
-void printError(char * str) {
+static void printError(char * str) {
 	ereport(ERROR,(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for email: \"%s\"",str)));
 }
 
-int validEmail(char * str) {
+static int validEmail(char * str) {
 
 	int length;
 	char * temp;
@@ -111,13 +128,13 @@ email_in(PG_FUNCTION_ARGS)
 	int length;
 	length = strlen(str);
 
-	if(!checkemal(str)
+	if(!validEmail(str))
 		printError(str);
 
 	//to lower case
 	char * lowerStr = (char *)palloc(length+1);
 	strcpy(lowerStr, str);
-	int i;
+	int i = 0;
 	for (i = 0; lowerStr[i]; i++)
 		lowerStr[i] = tolower(lowerStr[i]);
 
@@ -281,21 +298,21 @@ email_send(PG_FUNCTION_ARGS)
 
 
 static int
-email_cmp(Email * a, Email * b)
+email_cmp(EmailAddr * a, EmailAddr * b)
 {
-	int strLengthA = VARSIZE(a) - VARHDSIZE - 1;
-	int strLengthB = VARSIZE(b) - VARHDSIZE - 1;
+	int strLengthA = VARSIZE(a) - VARHDRSZ - 1;
+	int strLengthB = VARSIZE(b) - VARHDRSZ - 1;
 	char *domainApos = strchr(a->text, '@') + 1;
 	char *domainBpos = strchr(b->text, '@') + 1;
-	int localLengthA = domainA - a->text;
+	int localLengthA = domainApos - a->text;
 	int domainLengthA = strLengthA - localLengthA - 1;
-	int localLengthB = domainB - b->text;
+	int localLengthB = domainBpos - b->text;
 	int domainLengthB = strLengthB - localLengthB - 1;
 
 	char localA[256] = {0};
-	strncpy(localA, e->text, localLengthA);
+	strncpy(localA, a->text, localLengthA);
 	char localB[256] = {0};
-	strncpy(localB, e->text, localLengthB);
+	strncpy(localB, b->text, localLengthB);
 	char domainA[256] = {0};
 	strncpy(domainA, domainApos, domainLengthA);
 	char domainB[256] = {0};
@@ -318,13 +335,13 @@ email_cmp(Email * a, Email * b)
 	if(domain < 0)
 		return -2;
 }
-}
+
 /*****************************************************************************
  * New Operators
  *
  * A practical Email datatype would provide much more than this, of course.
 
-/*****************************************************************************
+ *****************************************************************************
  * Operator class for defining B-tree index
  *
  * It's essential that the comparison operators and support function for a
@@ -415,9 +432,9 @@ email_ne(PG_FUNCTION_ARGS)
 	EmailAddr *right = (EmailAddr *) PG_GETARG_POINTER(1);
 	int notEqual;
 	if(email_cmp(left,right)!=0){
-	    notEuqal = TRUE;
+	    notEqual = TRUE;
 	}else {
-	    notEuqal = FALSE;
+	    notEqual = FALSE;
 	}
 	PG_RETURN_BOOL(notEqual);
 }
@@ -479,8 +496,8 @@ Datum
 email_dne(PG_FUNCTION_ARGS)
 {
 	// todo
-	Email *left = (Email *) PG_GETARG_POINTER(0); 
-	Email *right = (Email *) PG_GETARG_POINTER(1);
+	EmailAddr *left = (EmailAddr *) PG_GETARG_POINTER(0); 
+	EmailAddr *right = (EmailAddr *) PG_GETARG_POINTER(1);
 	int domain_notEqual;
 	if(abs(email_cmp(left,right))>1){
 	    domain_notEqual = TRUE;
