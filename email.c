@@ -14,11 +14,16 @@
 
 #include <string.h>
 #include <ctype.h>
+#include <regex.h>
+
 
 PG_MODULE_MAGIC;
 
+typedef int int4;
+
 typedef struct Email
 {
+	int4 length;
 	char * local;
 	char * domain;
 } Email;
@@ -28,19 +33,86 @@ typedef struct Email
  * Input/Output functions
  *****************************************************************************/
 
+int checkLocal(char * local) {
+	char * localRegex = "^([a-zA-Z]([-]*[a-zA-Z0-9])*[\.])*[a-zA-Z]([-]*[a-zA-Z0-9])*$";
+	if(!regexMatch(local, localRegex)) return FALSE;
+	return TRUE;
+}
+
+int checkDomain(char * domain) {
+	char * domainRegex = "^([a-zA-Z]([-]*[a-zA-Z0-9])*[\.])+[a-zA-Z]([-]*[a-zA-Z0-9])*$";
+	if(!regexMatch(domain, domainRegex)) return FALSE;
+	return TRUE;
+}
+
+int regexMatch(char * str, char * regexPattern) {
+	regex_t regex;
+	int match = FALSE;
+	if(regcomp(&regex, regexPattern, REG_EXTENDED|REGICASE)) return -1;
+	if(!regexec(&regex, str, 0, NULL, 0)) match = TRUE;
+	regfree(&regex);
+	return match;
+}
+
+void printError(char * str) {
+	ereport(ERROR,(errcode(ERRCODE_INVALID_TEXT_REPRESENTATION), errmsg("invalid input syntax for email: \"%s\"",str)));
+}
+
 PG_FUNCTION_INFO_V1(email_in);
 
 Datum
 email_in(PG_FUNCTION_ARGS)
 {
 	char * str = PG_GETARG_CSTRING(0);
+
 	char local[256] = {0};
 	char domain[256] = {0};
+
 	Email * result;
+
 	char * temp;
+	int length;
+	int domainLength;
+	int localLength;
+
+	temp = strchr(str, '@');
+	if (!temp)
+		printError(str);
+
+	length = strlen(str);
+	domainLength = length - ((temp-str)+1);
+	localLength = temp-str;
+	if (domainLength > 255)
+		printError(str);
+	if (localLength > 255)
+		printError(str);
+
+	strncpy(local, str, localLength);
+	strncpy(domain, temp+1, domainLength);
+
+	if (!checkLocal(local))
+		printError(str);
+	if (!checkDomain(domain))
+		printError(str);
 
 	int i = 0;
+	while(local[i] != '\0') {
+		local[i] = tolower(local[i]);
+		i++;
+	}
+	i = 0;
+	while(domain[i] != '\0') {
+		domain[i] = tolower(domain[i]);
+		i++;
+	}
 
+	result = (Email *) palloc(VARHDRSZ + length - 1);
+	SET_VARSIZE(result, VARHDRSZ + length - 1);
+	memcpy(result->local, local, localLength);
+	memcpy(result->domain, domain, domainLength);
+
+
+/*
 // read in email address
 
 	while(*(str+i) != '@' && *(str+i) != '\0') {
@@ -137,6 +209,7 @@ email_in(PG_FUNCTION_ARGS)
 	result = (Email *) palloc(sizeof(Email));
 	result->local = strdup(local);
 	result->domain = strdup(domain);
+*/
 	PG_RETURN_POINTER(result);
 }
 
