@@ -269,8 +269,46 @@ email_send(PG_FUNCTION_ARGS)
 
 static int
 email_cmp(Email * a, Email * b)
-{ 
-	//todo
+{
+	int strLengthA = VARSIZE(a) - VARHDSIZE - 1;
+	int strLengthB = VARSIZE(b) - VARHDSIZE - 1;
+	char *domainApos = strchr(a->text, '@') + 1;
+	char *domainBpos = strchr(b->text, '@') + 1;
+	int localLengthA = domainA - a->text;
+	int domainLengthA = strLengthA - localLengthA - 1;
+	int localLengthB = domainB - b->text;
+	int domainLengthB = strLengthB - localLengthB - 1;
+	
+	
+	char *localA;
+	strncpy(localA, e->text, localLengthA);
+	char *localB;
+	strncpy(localB, e->text, localLengthB);
+	char *domainA;
+	strncpy(domainA, domainApos, domainLengthA);
+	char *domainB;
+	strncpy(domainB, domainBpos, domainLengthB);
+
+	int domain = strcmp(domainA,domainB);
+
+	int local = strcmp(localA, localB);
+	
+	if(domain==0)
+		{
+			if(local > 0) 
+				return 1;
+			if(local == 0) 
+				return 2;
+			if(local < 0) 
+				return 3;	
+			}
+		
+	if(domain > 0)
+		return 4;
+	if(domain < 0)
+		return 5;
+        
+}
 }
 /*****************************************************************************
  * New Operators
