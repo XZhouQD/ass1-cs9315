@@ -140,7 +140,7 @@ CREATE OPERATOR CLASS email_ops
       OPERATOR 3 =,
       OPERATOR 4 >=,
       OPERATOR 5 >,
-      FUNCTION 1 email_cmp(EmailAddr, EmailAddr);
+      FUNCTION 1 email_abs_cmp(EmailAddr, EmailAddr);
 
 CREATE OPERATOR CLASS email_ops
    DEFAULT FOR TYPE EmailAddress USING hash AS
