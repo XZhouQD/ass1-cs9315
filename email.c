@@ -30,8 +30,6 @@ typedef struct Email
 	char text[1];
 } EmailAddr;
 
-
-
 //Regex checking helper functions
 int regexMatch(char * str, char * regexPattern) {
 	regex_t regex;
