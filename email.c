@@ -280,13 +280,13 @@ email_cmp(Email * a, Email * b)
 	int domainLengthB = strLengthB - localLengthB - 1;
 	
 	
-	char *localA;
+	char localA[256] = {0};
 	strncpy(localA, e->text, localLengthA);
-	char *localB;
+	char localB[256] = {0};
 	strncpy(localB, e->text, localLengthB);
-	char *domainA;
+	char domainA[256] = {0};
 	strncpy(domainA, domainApos, domainLengthA);
-	char *domainB;
+	char domainB[256] = {0};
 	strncpy(domainB, domainBpos, domainLengthB);
 
 	int domain = strcmp(domainA,domainB);
