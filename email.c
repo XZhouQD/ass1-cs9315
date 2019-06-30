@@ -305,7 +305,7 @@ email_add(PG_FUNCTION_ARGS)
  * an internal three-way-comparison function, as we do here.
  *****************************************************************************/
 
-*/#define Mag(c)	((c)->x*(c)->x + (c)->y*(c)->y)
+/*#define Mag(c)	((c)->x*(c)->x + (c)->y*(c)->y)
 
 
 static int
