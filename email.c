@@ -25,7 +25,7 @@ typedef struct Email
 {
 	int4 length;
 	char text[1];
-} Email;
+} EmailAddr;
 
 
 
@@ -70,7 +70,7 @@ email_in(PG_FUNCTION_ARGS)
 	char local[256] = {0};
 	char domain[256] = {0};
 
-	Email * result;
+	EmailAddr * result;
 
 	char * temp;
 	int length;
@@ -109,7 +109,7 @@ email_in(PG_FUNCTION_ARGS)
 		lowerStr[i] = tolower(lowerStr[i]);
 
 	//store in struct
-	result = (Email *) palloc(VARHDRSZ + length + 1); //header + string
+	result = (EmailAddr *) palloc(VARHDRSZ + length + 1); //header + string
 	SET_VARSIZE(result, VARHDRSZ + length + 1);
 	snprintf(result->text, length+1, "%s", lowerStr);
 
@@ -220,7 +220,7 @@ PG_FUNCTION_INFO_V1(email_out);
 Datum
 email_out(PG_FUNCTION_ARGS)
 {
-	Email * e = (Email *) PG_GETARG_POINTER(0); //get the argument Email struct
+	EmailAddr * e = (EmailAddr *) PG_GETARG_POINTER(0); //get the argument Email struct
 
 	int resultLength = VARSIZE(e) - VARHDRSZ +1; //length = VARSIZE - int4*2 + '@' + '\0'
 	char * result = palloc(resultLength);
@@ -246,7 +246,7 @@ email_recv(PG_FUNCTION_ARGS)
 	char * str = pg_getmsgstring(buffer);
 	str[length-1] = '\0';
 
-	Email * result = (Email *)palloc(length+VARHDRSZ);
+	EmailAddr * result = (EmailAddr *)palloc(length+VARHDRSZ);
 	SET_VARSIZE(result, length+VARHDRSZ);
 	snprintf(result->text, length, "%s", str);
 
@@ -258,10 +258,10 @@ PG_FUNCTION_INFO_V1(email_send);
 Datum
 email_send(PG_FUNCTION_ARGS)
 {
-	Email *e = (Email *) PG_GETARG_POINTER(0);
+	EmailAddr *e = (EmailAddr *) PG_GETARG_POINTER(0);
 	StringInfoData buffer;
 	pg_begintypsend(&buffer);
-	pg_sendint64(&buffer, VARSIZE(email)- VARHDRSZ);
+	pg_sendint64(&buffer, VARSIZE(e)- VARHDRSZ);
 	pg_sendstring(&buffer, e->text);
 	PG_RETURN_BYTEA_P(pg_endtypsend(&buffer));
 }
