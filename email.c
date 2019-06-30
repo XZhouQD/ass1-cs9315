@@ -266,11 +266,32 @@ email_send(PG_FUNCTION_ARGS)
 	PG_RETURN_BYTEA_P(pg_endtypsend(&buffer));
 }
 
+
+static int
+email_cmp(Email * a, Email * b)
+{ 
+	//todo
+}
 /*****************************************************************************
  * New Operators
  *
  * A practical Email datatype would provide much more than this, of course.
  *****************************************************************************/
+
+PG_FUNCTION_INFO_V1(email_add);
+
+Datum
+email_add(PG_FUNCTION_ARGS)
+{
+	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
+	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
+	Complex    *result;
+
+	result = (Complex *) palloc(sizeof(Complex));
+	result->x = a->x + b->x;
+	result->y = a->y + b->y;
+	PG_RETURN_POINTER(result);
+}
 
 
 /*****************************************************************************
@@ -284,7 +305,8 @@ email_send(PG_FUNCTION_ARGS)
  * an internal three-way-comparison function, as we do here.
  *****************************************************************************/
 
-#define Mag(c)	((c)->x*(c)->x + (c)->y*(c)->y)
+*/#define Mag(c)	((c)->x*(c)->x + (c)->y*(c)->y)
+
 
 static int
 email_abs_cmp_internal(Email * a, Email * b)
@@ -297,62 +319,72 @@ email_abs_cmp_internal(Email * a, Email * b)
 	if (amag > bmag)
 		return 1;
 	return 0;
+}*/
+
+
+PG_FUNCTION_INFO_V1(email_eql);
+
+Datum 
+email_eql(PG_FUNCTION_ARGS)
+{
+	// todo
+}
+
+PG_FUNCTION_INFO_V1(email_gt);
+
+Datum 
+email_gt(PG_FUNCTION_ARGS)
+{
+	// todo
 }
 
 
-PG_FUNCTION_INFO_V1(email_abs_lt);
+PG_FUNCTION_INFO_V1(email_domain_eql);
 
-Datum
-email_abs_lt(PG_FUNCTION_ARGS)
+Datum 
+email_domain_eql(PG_FUNCTION_ARGS)
 {
-	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
-	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
-
-	PG_RETURN_BOOL(email_abs_cmp_internal(a, b) < 0);
+	// todo
 }
 
-PG_FUNCTION_INFO_V1(email_abs_le);
+PG_FUNCTION_INFO_V1(email_not_eql);
 
-Datum
-email_abs_le(PG_FUNCTION_ARGS)
+Datum 
+email_not_eql(PG_FUNCTION_ARGS)
 {
-	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
-	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
-
-	PG_RETURN_BOOL(email_abs_cmp_internal(a, b) <= 0);
+	//todo
 }
 
-PG_FUNCTION_INFO_V1(email_abs_eq);
+PG_FUNCTION_INFO_V1(email_ge);
 
-Datum
-email_abs_eq(PG_FUNCTION_ARGS)
+Datum 
+email_ge(PG_FUNCTION_ARGS)
 {
-	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
-	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
-
-	PG_RETURN_BOOL(email_abs_cmp_internal(a, b) == 0);
+	//todo
 }
 
-PG_FUNCTION_INFO_V1(email_abs_ge);
+PG_FUNCTION_INFO_V1(email_lt);
 
-Datum
-email_abs_ge(PG_FUNCTION_ARGS)
+Datum 
+email_lt(PG_FUNCTION_ARGS)
 {
-	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
-	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
-
-	PG_RETURN_BOOL(email_abs_cmp_internal(a, b) >= 0);
+	// todo
 }
 
-PG_FUNCTION_INFO_V1(email_abs_gt);
+PG_FUNCTION_INFO_V1(email_le);
 
-Datum
-email_abs_gt(PG_FUNCTION_ARGS)
+Datum 
+email_le(PG_FUNCTION_ARGS)
 {
-	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
-	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
+	// todo
+}
 
-	PG_RETURN_BOOL(email_abs_cmp_internal(a, b) > 0);
+PG_FUNCTION_INFO_V1(email_domain_not_eql);
+
+Datum 
+email_domain_not_eql(PG_FUNCTION_ARGS)
+{
+	// todo
 }
 
 PG_FUNCTION_INFO_V1(email_abs_cmp);
@@ -360,8 +392,15 @@ PG_FUNCTION_INFO_V1(email_abs_cmp);
 Datum
 email_abs_cmp(PG_FUNCTION_ARGS)
 {
-	Complex    *a = (Complex *) PG_GETARG_POINTER(0);
-	Complex    *b = (Complex *) PG_GETARG_POINTER(1);
-
-	PG_RETURN_INT32(email_abs_cmp_internal(a, b));
+	// todo
 }
+
+
+PG_FUNCTION_INFO_V1(email_check);
+
+Datum
+email_check(PG_FUNCTION_ARGS)
+{
+	// todo
+}
+
