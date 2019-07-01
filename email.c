@@ -248,6 +248,7 @@ email_cmp(Email * a, Email * b)
 		return 2;
 	if(domain < 0)
 		return -2;
+	printError("Internal Compare Error.");
 }
 
 /*****************************************************************************
@@ -441,5 +442,5 @@ email_hash(PG_FUNCTION_ARGS)
 {
 	Email * e = (Email *) PG_GETARG_POINTER(0);
 	int length = strlen(e->text);
-	PG_RETURN_INT32(DatumGetUInt32(hash_any((const char *)e->text, length)));
+	PG_RETURN_INT32(DatumGetUInt32(hash_any((const unsigned char *)e->text, length)));
 }
