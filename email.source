@@ -77,6 +77,11 @@ CREATE FUNCTION email_check(EmailAddr)
    AS '_OBJWD_/email'
    LANGUAGE C IMMUTABLE STRICT;
 
+CREATE FUNCTION email_hash(EmailAddr)
+   RETURNS int4
+   AS '_OBJWD_/email'
+   LANGUAGE C IMMUTABLE STRICT;
+
 CREATE OPERATOR = (
    leftarg = EmailAddr,
    rightarg = EmailAddr,
@@ -145,5 +150,5 @@ CREATE OPERATOR CLASS email_ops
 CREATE OPERATOR CLASS email_ops
    DEFAULT FOR TYPE EmailAddr USING hash AS
       OPERATOR 1 = ,
-      FUNCTION 1 email_check(EmailAddr);
+      FUNCTION 1 email_hash(EmailAddr);
 

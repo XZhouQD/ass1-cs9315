@@ -11,6 +11,7 @@
 
 #include "fmgr.h"
 #include "libpq/pqformat.h"		/* needed for send/recv functions */
+#include "access/hash.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,7 +45,7 @@ Datum email_le(PG_FUNCTION_ARGS);
 Datum email_dne(PG_FUNCTION_ARGS);
 Datum email_abs_cmp(PG_FUNCTION_ARGS);
 Datum email_check(PG_FUNCTION_ARGS);
-
+Datum email_hash(PG_FUNCTION_ARGS);
 
 
 // Regex checking helper functions
@@ -89,15 +90,15 @@ int validEmail(char * str) {
 
 	//Length check
 	length = strlen(str);
-	domainLength = length - ((temp-str)+1);
+	domainLength = length - (temp-str) - 1;
 	localLength = temp-str;
 	if (domainLength > 256)
 		return FALSE;
 	if (localLength > 256)
 		return FALSE;
 
-	char local[256] = {0};
-	char domain[256] = {0};
+	char local[257] = {0};
+	char domain[257] = {0};
 
 	//copy into seperate string for checking
 	strncpy(local, str, localLength);
@@ -433,3 +434,12 @@ email_check(PG_FUNCTION_ARGS)
 	PG_RETURN_INT32(validEmail(e->text));
 }
 
+PG_FUNCTION_INFO_V1(email_hash);
+
+Datum
+email_hash(PG_FUNCTION_ARGS)
+{
+	Email * e = (Email *) PG_GETARG_POINTER(0);
+	int length = strlen(e->text);
+	PG_RETURN_INT32(DatumGetUInt32(hash_any((const char *)e->text, length)));
+}
